@@ -6,7 +6,6 @@ set -u # Treat unset variables as an error
 set -f # Disable globbing
 
 # Constants
-BASE_URL='https://api.cloudflareclient.com/v0a2483'
 DEPENDENCIES="curl jq head tail printf cat"
 
 # Validate dependencies are installed
@@ -103,9 +102,14 @@ esac
 # Register a new account
 priv="$(wg genkey)"
 publ="$(printf %s "${priv}" | wg pubkey)"
-reg="$(cfcurl --header 'Content-Type: application/json' --request "POST" --header 'CF-Access-Jwt-Assertion: '"${teams}" \
-	--data '{"key":"'"${publ}"'","install_id":"","fcm_token":"","model":"","serial_number":"","locale":"en_US"}' \
-	"${BASE_URL}/reg")"
+reg="$(
+	cfcurl \
+		--header "Content-Type: application/json" \
+		-k -H "Host: api.cloudflareclient.com" --request POST \
+		--header "CF-Access-Jwt-Assertion: ${teams}" \
+		--data '{"key":"'"${publ}"'","install_id":"","fcm_token":"","model":"","serial_number":"","locale":"en_US"}' \
+		https://104.19.237.24/v0a2483/reg
+)"
 
 # DEBUG: Show registration response and exit
 [ "${show_regonly}" = 1 ] && { printf %s "${reg}" | jq; exit 0; }
